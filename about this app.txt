@@ -1,0 +1,13 @@
+// You must first start the MongoDB local server.
+   You do this by navigating to C:\Program Files\MongoDB\Server\4.0\bin
+   then ">>> mongod.exe --dbpath <path to the database>" and for this app we specified the <path> to be /Users/Tino/mongo-data
+
+// In MongoDB, you don't have to create a database. By simply specifying it in the path in MongoDB.connect(<path>, callback) will create the database if it doesn't exist already.
+
+// The mongoDB _id of a document is made up of timestamp, machine number, process id, etc. So you can extract these information, such as timestamp, from the _id object.
+
+// ES6 Syntax: Object Destructuring
+// var user = {name: 'Tino', age: 23}
+// var {name} = user; <-- this will extract the 'name' key and turn it into a variable.
+
+// doing "db.collection(<collection name>).find(<query>)" returns a cursor object.
