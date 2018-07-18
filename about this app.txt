@@ -11,3 +11,7 @@
 // var {name} = user; <-- this will extract the 'name' key and turn it into a variable.
 
 // doing "db.collection(<collection name>).find(<query>)" returns a cursor object.
+
+// to kill a server listening on a port, do:
+  ">>> netstat -ano | findstr :3000"
+  ">>> taskkill /PID <portID> /F"
