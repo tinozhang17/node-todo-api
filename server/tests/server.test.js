@@ -102,3 +102,61 @@ describe('GET /todos/:id', (done) => {
             .end(done);
     });
 });
+
+describe('DELETE /todos/:id', () => {
+    it('should return the deleted document', (done) => {
+        request(app)
+            .delete(`/todos/${todos[0]._id.toHexString()}`)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(todos[0].text);
+            })
+            .end(done);
+    });
+
+    it('should return status 404 due to document not found', (done) => {
+        request(app)
+            .delete(`/todos/${new ObjectID().toHexString()}`)
+            .expect(404)
+            .end(done);
+    });
+
+    it('should return status 404 due to invalid id', (done) => {
+        request(app)
+            .delete(`/todos/123`)
+            .expect(404)
+            .end(done);
+    });
+});
+
+let updatedDocument = {
+    text: "Updated Document",
+    completed: true
+};
+
+describe('PATCH /todos/:id', () => {
+    it('should return the updated document', (done) => {
+        request(app)
+            .patch(`/todos/${todos[0]._id.toHexString()}`)
+            .send(updatedDocument)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(updatedDocument.text);
+            })
+            .end(done);
+    });
+
+    it('should return status 404 due to invalid id', (done) => {
+        request(app)
+            .patch(`/todos/123`)
+            .send(updatedDocument)
+            .expect(404)
+            .end(done);
+    });
+
+    it('should return status 404 due to document not found', (done) => {
+        request(app)
+            .patch(`/todos/${new ObjectID().toHexString()}`)
+            .send(updatedDocument)
+            .expect(404)
+            .end(done);
+    });
+});
