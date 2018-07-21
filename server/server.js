@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 const _ = require('lodash');
+const config = require('./config/config');
 
 const {mongoose} = require('./db/mongoose');
 const {Todo} = require('./models/todo');
@@ -91,6 +92,21 @@ app.patch('/todos/:id', (req, res) => {
         res.send({todo});
     }).catch((err) => {
         return res.status(400).send();
+    });
+});
+
+// POST /users
+
+app.post('/users', (req, res) => {
+    let body = _.pick(req.body, ['email', 'password']);
+    let user = new User(body);
+
+    user.save().then(() => {
+        return user.generateAuthToken();
+    }).then((token) => {
+        res.header('x-auth', token).send(user); // when you tack on an "x-" before a header, you are creating a custom header, which means it's not necessarily a header that HTTP supports by default. In our example, we are using a jwt token scheme, so we are creating a custom header to store that value.
+    }).catch((err) => {
+        res.status(400).send(err);
     });
 });
 
