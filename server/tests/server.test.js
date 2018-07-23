@@ -4,22 +4,12 @@ const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
-
-const todos = [{
-    _id: new ObjectID,
-    text: 'First test todo'
-}, {
-    _id: new ObjectID,
-    text: 'Second test todo'
-}];
-
-beforeEach((done) => {
-    Todo.remove({}).then(() => {
-        return Todo.insertMany(todos);
-    }).then(() => done());
-}); // this will run before every test. We are wiping To-do because we are expecting the length of the return from To-do.find() to be 1, since we are test adding a document. The script won't move on until done() is called.
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
+const {User} = require('./../models/user');
 
 
+beforeEach(populateUsers);
+beforeEach(populateTodos); // this will run before every test. We are wiping To-do because we are expecting the length of the return from To-do.find() to be 1, since we are test adding a document. The script won't move on until done() is called.
 
 describe('POST /todos', () => {
     it('should create a new todo', (done) => {
@@ -133,30 +123,109 @@ let updatedDocument = {
     completed: true
 };
 
+let updatedDocument2 = {
+    text: 'Updated Document 2',
+    completed: false
+};
+
 describe('PATCH /todos/:id', () => {
-    it('should return the updated document', (done) => {
+    it('should updated the todo', (done) => {
         request(app)
             .patch(`/todos/${todos[0]._id.toHexString()}`)
             .send(updatedDocument)
+            .expect(200)
             .expect((res) => {
                 expect(res.body.todo.text).toBe(updatedDocument.text);
+                expect(res.body.todo.completed).toBe(true);
+                expect(typeof res.body.todo.completedAt).toBe('number');
             })
             .end(done);
     });
 
-    it('should return status 404 due to invalid id', (done) => {
+    it('should clear completedAt when todo is not completed', (done) => {
         request(app)
-            .patch(`/todos/123`)
-            .send(updatedDocument)
-            .expect(404)
+            .patch(`/todos/${todos[1]._id.toHexString()}`)
+            .send(updatedDocument2)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(updatedDocument2.text);
+                expect(res.body.todo.completed).toBe(false);
+                expect(res.body.todo.completedAt).toBe(null);
+            })
+            .end(done);
+    });
+});
+
+describe('GET /users/me', () => {
+    it('should return user if authenticated', (done) => {
+        request(app)
+            .get('/users/me')
+            .set('x-auth', users[0].tokens[0].token)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body._id).toBe(users[0]._id.toHexString());
+                expect(res.body.email).toBe(users[0].email);
+            })
             .end(done);
     });
 
-    it('should return status 404 due to document not found', (done) => {
+    it('should return a 401 if not authenticated', (done) => {
         request(app)
-            .patch(`/todos/${new ObjectID().toHexString()}`)
-            .send(updatedDocument)
-            .expect(404)
+            .get('/users/me')
+            .expect(401)
+            .expect((res) => {
+                expect(res.body).toEqual({})
+            })
+            .end(done);
+    });
+});
+
+describe('POST /users', () => {
+    it('should create a user', (done) => {
+        let testUser = {
+            email: 'example@example.com',
+            password: '123mnb'
+        };
+
+        request(app)
+            .post('/users')
+            .send(testUser)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toBeTruthy();
+                expect(res.body._id).toBeTruthy();
+                expect(res.body.email).toBe(testUser.email);
+            })
+            .end((err) => {
+                if (err) {
+                    return done(err);
+                }
+                User.findOne({email: testUser.email}).then((user) => {
+                    expect(user).toBeTruthy();
+                    expect(user.password).not.toBe(testUser.email);
+                    done();
+                });
+            });
+    });
+
+    it('should return validation error if request is invalid', (done) => {
+        request(app)
+            .post('/users')
+            .send({
+                email: 'example',
+                password: users[0].password
+            })
+            .expect(400)
+            .end(done);
+    });
+
+    it('should not create user if email is in use', (done) => {
+        request(app)
+            .post('/users')
+            .send({
+                email: users[0].email,
+                password: users[0].password
+            })
+            .expect(400)
             .end(done);
     });
 });

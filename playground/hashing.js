@@ -1,5 +1,7 @@
 const {SHA256} = require('crypto-js');
 
+
+
 let msg = 'I am user number 3';
 let hash = SHA256(msg).toString();
 

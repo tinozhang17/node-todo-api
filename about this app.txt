@@ -15,3 +15,6 @@
 // to kill a server listening on a port, do:
   ">>> netstat -ano | findstr :3000"
   ">>> taskkill /PID <portID> /F"
+
+// Schema.methods creates instance methods
+// Schema.statics creates schema methods

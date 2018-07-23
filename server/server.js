@@ -7,6 +7,7 @@ const config = require('./config/config');
 const {mongoose} = require('./db/mongoose');
 const {Todo} = require('./models/todo');
 const {User} = require('./models/user');
+const {authenticate, authenticateLogin} = require('./middleware/authenticate');
 
 const PORT = process.env.PORT;
 
@@ -107,6 +108,22 @@ app.post('/users', (req, res) => {
         res.header('x-auth', token).send(user); // when you tack on an "x-" before a header, you are creating a custom header, which means it's not necessarily a header that HTTP supports by default. In our example, we are using a jwt token scheme, so we are creating a custom header to store that value.
     }).catch((err) => {
         res.status(400).send(err);
+    });
+});
+
+app.get('/users/me', authenticate, (req, res) => {
+    res.send(req.user);
+});
+
+app.post('/users/login', (req, res) => {
+    let body = _.pick(req.body, ['email', 'password']);
+
+    User.findByCredentials(body.email, body.password).then((user) => {
+        return user.generateAuthToken().then((token) => {
+            res.header('x-auth', token).send(user);
+        });
+    }).catch((e) => {
+        res.status(400).send();
     });
 });
 
