@@ -1,3 +1,5 @@
 .idea/
 node_modules/
 package-lock.json
+server/config/config.json
+sh.exe.stackdump
